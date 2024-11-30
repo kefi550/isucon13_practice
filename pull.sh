@@ -17,6 +17,8 @@ for i in $(seq 1 3); do
   rsync -avr ${host}:/etc/systemd/system/isupipe-node.service "${LOCAL_PATH}/${host}/etc/systemd/system/"
   mkdir -p ${LOCAL_PATH}/${host}/etc/mysql/
   rsync -avr ${host}:/etc/mysql/ "${LOCAL_PATH}/${host}/etc/mysql/"
+  mkdir -p ${LOCAL_PATH}/${host}/etc/pdns/
+  rsync -avr ${host}:/etc/powerdns/ "${LOCAL_PATH}/${host}/etc/powerdns/"
 done
 
 
