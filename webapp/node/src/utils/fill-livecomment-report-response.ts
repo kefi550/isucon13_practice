@@ -3,12 +3,12 @@ import {
   LivecommentReportsModel,
   LivecommentsModel,
   UserModel,
-} from '../types/models'
-import { UserResponse, fillUserResponse } from './fill-user-response'
+} from '../types/models.js'
+import { UserResponse, fillUserResponse } from './fill-user-response.js'
 import {
   LivecommentResponse,
   fillLivecommentResponse,
-} from './fill-livecomment-response'
+} from './fill-livecomment-response.js'
 
 export interface LivecommentReportResponse {
   id: number

@@ -1,10 +1,10 @@
 import { PoolConnection, RowDataPacket } from 'mysql2/promise'
-import { LivecommentsModel, LivestreamsModel, UserModel } from '../types/models'
-import { UserResponse, fillUserResponse } from './fill-user-response'
+import { LivecommentsModel, LivestreamsModel, UserModel } from '../types/models.js'
+import { UserResponse, fillUserResponse } from './fill-user-response.js'
 import {
   LivestreamResponse,
   fillLivestreamResponse,
-} from './fill-livestream-response'
+} from './fill-livestream-response.js'
 
 export interface LivecommentResponse {
   id: number

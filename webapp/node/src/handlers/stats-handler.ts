@@ -1,15 +1,15 @@
 import { Context } from 'hono'
 import { RowDataPacket } from 'mysql2/promise'
-import { HonoEnvironment } from '../types/application'
-import { verifyUserSessionMiddleware } from '../middlewares/verify-user-session-middleare'
-import { throwErrorWith } from '../utils/throw-error-with'
+import { HonoEnvironment } from '../types/application.js'
+import { verifyUserSessionMiddleware } from '../middlewares/verify-user-session-middleare.js'
+import { throwErrorWith } from '../utils/throw-error-with.js'
 import {
   LivecommentsModel,
   LivestreamsModel,
   ReactionsModel,
   UserModel,
-} from '../types/models'
-import { atoi } from '../utils/integer'
+} from '../types/models.js'
+import { atoi } from '../utils/integer.js'
 
 // GET /api/user/:username/statistics
 export const getUserStatisticsHandler = [

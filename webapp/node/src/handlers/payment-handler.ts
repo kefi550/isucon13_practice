@@ -1,7 +1,7 @@
 import { Context } from 'hono'
 import { RowDataPacket } from 'mysql2/promise'
-import { HonoEnvironment } from '../types/application'
-import { throwErrorWith } from '../utils/throw-error-with'
+import { HonoEnvironment } from '../types/application.js'
+import { throwErrorWith } from '../utils/throw-error-with.js'
 
 // GET /api/payment
 export const GetPaymentResult = async (

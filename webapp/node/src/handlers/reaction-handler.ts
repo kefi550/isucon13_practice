@@ -1,15 +1,15 @@
 import { Context } from 'hono'
 import { ResultSetHeader, RowDataPacket } from 'mysql2/promise'
-import { HonoEnvironment } from '../types/application'
-import { verifyUserSessionMiddleware } from '../middlewares/verify-user-session-middleare'
-import { defaultUserIDKey } from '../contants'
+import { HonoEnvironment } from '../types/application.js'
+import { verifyUserSessionMiddleware } from '../middlewares/verify-user-session-middleare.js'
+import { defaultUserIDKey } from '../contants.js'
 import {
   ReactionResponse,
   fillReactionResponse,
-} from '../utils/fill-reaction-response'
-import { throwErrorWith } from '../utils/throw-error-with'
-import { ReactionsModel } from '../types/models'
-import { atoi } from '../utils/integer'
+} from '../utils/fill-reaction-response.js'
+import { throwErrorWith } from '../utils/throw-error-with.js'
+import { ReactionsModel } from '../types/models.js'
+import { atoi } from '../utils/integer.js'
 
 // GET /api/livestream/:livestream_id/reaction
 export const getReactionsHandler = [

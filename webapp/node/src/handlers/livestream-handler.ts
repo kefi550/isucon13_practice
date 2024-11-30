@@ -1,16 +1,16 @@
 import { Context } from 'hono'
 import { RowDataPacket, ResultSetHeader } from 'mysql2/promise'
-import { HonoEnvironment } from '../types/application'
-import { verifyUserSessionMiddleware } from '../middlewares/verify-user-session-middleare'
-import { defaultUserIDKey } from '../contants'
+import { HonoEnvironment } from '../types/application.js'
+import { verifyUserSessionMiddleware } from '../middlewares/verify-user-session-middleare.js'
+import { defaultUserIDKey } from '../contants.js'
 import {
   LivestreamResponse,
   fillLivestreamResponse,
-} from '../utils/fill-livestream-response'
+} from '../utils/fill-livestream-response.js'
 import {
   LivecommentReportResponse,
   fillLivecommentReportResponse,
-} from '../utils/fill-livecomment-report-response'
+} from '../utils/fill-livecomment-report-response.js'
 import {
   LivecommentReportsModel,
   LivestreamTagsModel,
@@ -18,9 +18,9 @@ import {
   ReservationSlotsModel,
   TagsModel,
   UserModel,
-} from '../types/models'
-import { throwErrorWith } from '../utils/throw-error-with'
-import { atoi } from '../utils/integer'
+} from '../types/models.js'
+import { throwErrorWith } from '../utils/throw-error-with.js'
+import { atoi } from '../utils/integer.js'
 
 // POST /api/livestream/reservation
 export const reserveLivestreamHandler = [

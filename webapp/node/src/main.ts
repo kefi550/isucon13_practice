@@ -11,14 +11,14 @@ import {
   ApplicationRuntime,
   HonoEnvironment,
   Runtime,
-} from './types/application'
+} from './types/application.js'
 import {
   getLivecommentsHandler,
   postLivecommentHandler,
   getNgwords,
   reportLivecommentHandler,
   moderateHandler,
-} from './handlers/livecomment-handler'
+} from './handlers/livecomment-handler.js'
 import {
   reserveLivestreamHandler,
   searchLivestreamsHandler,
@@ -28,17 +28,17 @@ import {
   getLivecommentReportsHandler,
   enterLivestreamHandler,
   exitLivestreamHandler,
-} from './handlers/livestream-handler'
-import { GetPaymentResult } from './handlers/payment-handler'
+} from './handlers/livestream-handler.js'
+import { GetPaymentResult } from './handlers/payment-handler.js'
 import {
   postReactionHandler,
   getReactionsHandler,
-} from './handlers/reaction-handler'
+} from './handlers/reaction-handler.js'
 import {
   getUserStatisticsHandler,
   getLivestreamStatisticsHandler,
-} from './handlers/stats-handler'
-import { getTagHandler, getStreamerThemeHandler } from './handlers/top-handler'
+} from './handlers/stats-handler.js'
+import { getTagHandler, getStreamerThemeHandler } from './handlers/top-handler.js'
 import {
   registerHandler,
   loginHandler,
@@ -46,7 +46,11 @@ import {
   getUserHandler,
   getIconHandler,
   postIconHandler,
-} from './handlers/user-handler'
+} from './handlers/user-handler.js'
+import { fileURLToPath } from "url";
+import path from "path";
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const runtime = {
   exec: async (cmd: string[]) =>

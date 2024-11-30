@@ -4,8 +4,8 @@ import {
   LivestreamsModel,
   TagsModel,
   UserModel,
-} from '../types/models'
-import { UserResponse, fillUserResponse } from './fill-user-response'
+} from '../types/models.js'
+import { UserResponse, fillUserResponse } from './fill-user-response.js'
 
 export interface LivestreamResponse {
   id: number

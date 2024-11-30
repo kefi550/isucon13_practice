@@ -1,15 +1,15 @@
 import { Context } from 'hono'
 import { ResultSetHeader, RowDataPacket } from 'mysql2/promise'
-import { HonoEnvironment } from '../types/application'
+import { HonoEnvironment } from '../types/application.js'
 import {
   defaultUserIDKey,
   defaultUserNameKey,
   defaultSessionExpiresKey,
-} from '../contants'
-import { verifyUserSessionMiddleware } from '../middlewares/verify-user-session-middleare'
-import { fillUserResponse } from '../utils/fill-user-response'
-import { throwErrorWith } from '../utils/throw-error-with'
-import { IconModel, UserModel } from '../types/models'
+} from '../contants.js'
+import { verifyUserSessionMiddleware } from '../middlewares/verify-user-session-middleare.js'
+import { fillUserResponse } from '../utils/fill-user-response.js'
+import { throwErrorWith } from '../utils/throw-error-with.js'
+import { IconModel, UserModel } from '../types/models.js'
 
 // GET /api/user/:username/icon
 export const getIconHandler = [

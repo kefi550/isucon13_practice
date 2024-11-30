@@ -1,9 +1,9 @@
 import { Context } from 'hono'
 import { RowDataPacket } from 'mysql2/promise'
-import { HonoEnvironment } from '../types/application'
-import { verifyUserSessionMiddleware } from '../middlewares/verify-user-session-middleare'
-import { TagsModel, ThemeModel, UserModel } from '../types/models'
-import { throwErrorWith } from '../utils/throw-error-with'
+import { HonoEnvironment } from '../types/application.js'
+import { verifyUserSessionMiddleware } from '../middlewares/verify-user-session-middleare.js'
+import { TagsModel, ThemeModel, UserModel } from '../types/models.js'
+import { throwErrorWith } from '../utils/throw-error-with.js'
 
 // GET /api/tag
 export const getTagHandler = async (

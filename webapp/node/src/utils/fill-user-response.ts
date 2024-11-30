@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto'
 import { PoolConnection, RowDataPacket } from 'mysql2/promise'
-import { IconModel, ThemeModel, UserModel } from '../types/models'
+import { IconModel, ThemeModel, UserModel } from '../types/models.js'
 
 export interface UserResponse {
   id: number

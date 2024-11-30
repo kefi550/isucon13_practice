@@ -1,20 +1,20 @@
 import { Context } from 'hono'
 import { RowDataPacket, ResultSetHeader } from 'mysql2/promise'
-import { HonoEnvironment } from '../types/application'
-import { verifyUserSessionMiddleware } from '../middlewares/verify-user-session-middleare'
-import { defaultUserIDKey } from '../contants'
+import { HonoEnvironment } from '../types/application.js'
+import { verifyUserSessionMiddleware } from '../middlewares/verify-user-session-middleare.js'
+import { defaultUserIDKey } from '../contants.js'
 import {
   LivecommentResponse,
   fillLivecommentResponse,
-} from '../utils/fill-livecomment-response'
-import { fillLivecommentReportResponse } from '../utils/fill-livecomment-report-response'
+} from '../utils/fill-livecomment-response.js'
+import { fillLivecommentReportResponse } from '../utils/fill-livecomment-report-response.js'
 import {
   LivecommentsModel,
   LivestreamsModel,
   NgWordsModel,
-} from '../types/models'
-import { throwErrorWith } from '../utils/throw-error-with'
-import { atoi } from '../utils/integer'
+} from '../types/models.js'
+import { throwErrorWith } from '../utils/throw-error-with.js'
+import { atoi } from '../utils/integer.js'
 
 // GET /api/livestream/:livestream_id/livecomment
 export const getLivecommentsHandler = [
