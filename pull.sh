@@ -19,6 +19,8 @@ for i in $(seq 1 3); do
   rsync -avr ${host}:/etc/mysql/ "${LOCAL_PATH}/${host}/etc/mysql/"
   mkdir -p ${LOCAL_PATH}/${host}/etc/pdns/
   rsync -avr ${host}:/etc/powerdns/ "${LOCAL_PATH}/${host}/etc/powerdns/"
+  mkdir -p ${LOCAL_PATH}/${host}/etc/nginx/
+  rsync -avr ${host}:/etc/nginx/ "${LOCAL_PATH}/${host}/etc/nginx/"
 done
 
 
