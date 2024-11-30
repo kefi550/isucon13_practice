@@ -6,6 +6,8 @@ LOCAL_PATH="."
 
 mkdir -p ${LOCAL_PATH}/webapp/node/
 rsync -avr isu1:~/webapp/node/ "${LOCAL_PATH}/webapp/node/"
+mkdir -p ${LOCAL_PATH}/webapp/sql/
+rsync -avr isu1:~/webapp/sql/ "${LOCAL_PATH}/webapp/sql/"
 
 for i in $(seq 1 3); do
   host="isu${i}"
