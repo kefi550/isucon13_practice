@@ -183,6 +183,11 @@ export const registerHandler = async (
       .get('runtime')
       .exec([
         'ssh',
+        '-T',
+        '-q',
+        // '-o ControlMaster=auto',
+        // '-o ControlPath=/tmp/ssh-socket%r@%h-%p',
+        // '-o ControlPersist=60',
         pdns_host,
         'pdnsutil',
         'add-record',
