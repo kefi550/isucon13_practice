@@ -178,9 +178,12 @@ export const registerHandler = async (
       ])
       .catch(throwErrorWith('failed to insert user theme'))
 
+    const pdns_host = process.env['ISUCON13_MYSQL_DIALCONFIG_ADDRESS'] ?? '127.0.0.1';
     await c
       .get('runtime')
       .exec([
+        'ssh',
+        pdns_host,
         'pdnsutil',
         'add-record',
         't.isucon.pw',
