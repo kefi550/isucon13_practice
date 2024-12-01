@@ -24,10 +24,13 @@ export const fillLivestreamResponses = async (
   livestreams: LivestreamsModel[],
   getFallbackUserIcon: () => Promise<Readonly<ArrayBuffer>>,
 ) => {
-  const uniqueUserIds = [...new Set(livestreams.map(l => l.user_id))]
+  const uniqueUserIds = [...new Set(livestreams.map(r => r.user_id))]
+
+  if(uniqueUserIds.length === 0) return []
+
   const [users] = await conn.query<(UserModel & RowDataPacket)[]>(
     'SELECT * FROM users WHERE id IN (?)',
-    [uniqueUserIds],
+    [[uniqueUserIds]],
   )
   if(users.length !== uniqueUserIds.length) {
     throw new Error("not found user that has the given id")
@@ -36,21 +39,37 @@ export const fillLivestreamResponses = async (
   const userResponses = await fillUserResponses(conn, users, getFallbackUserIcon)
   const userMap = new Map(userResponses.map(u => [u.id, u]))
 
-  const [tags] = await conn.query<(TagsModel & RowDataPacket)[]>(
+  const uniqueLivestreamIds = [...new Set(livestreams.map(l => l.id))]
+  const [tags] = await conn.query<(TagsModel & Pick<LivestreamTagsModel, 'livestream_id'> & RowDataPacket)[]>(
     `
-      WITH livestream_tag_ids AS (
-        SELECT tag_id FROM livestream_tags WHERE livestream_id = ?
-      )
       SELECT 
-        tags.*
+        tags.*,
+        livestream_tags.livestream_id
       FROM 
         tags
-      INNER JOIN livestream_tag_ids ON tags.id = livestream_tag_ids.tag_id
-    `
+      INNER JOIN livestream_tags ON tags.id = livestream_tags.tag_id
+      WHERE
+        livestream_tags.livestream_id IN (?)
+    `,
+    [[uniqueLivestreamIds]]
   )
+
+  // 手続きで書いた方が早いので手続的に書いてる
+  const tagMap = new Map<number, typeof tags>()
+  {
+    tags.forEach(tag => {
+      const livestreamTags = tagMap.get(tag.livestream_id)
+      if(livestreamTags) {
+        livestreamTags.push(tag)
+      } else {
+        tagMap.set(tag.livestream_id, [tag])
+      }
+    })
+  }
 
   const responses: LivestreamResponse[] = livestreams.map(livestream => {
     const userResponse = userMap.get(livestream.user_id)!
+    const tags = tagMap.get(livestream.id) || []
 
     return {
       id: livestream.id,

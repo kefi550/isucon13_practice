@@ -21,22 +21,18 @@ export const fillUserResponses = async(
   getFallbackUserIcon: () => Promise<Readonly<ArrayBuffer>>,
 ) => {
   const uniqueUserIds = [...new Set(users.map(u => u.id))]
-  // const [users] = await conn.query<(UserModel & RowDataPacket)[]>(
-  //   'SELECT * FROM users WHERE id IN (?)',
-  //   [uniqueUserIds],
-  // )
 
-  // if (users.length !== uniqueUserIds.length) throw new Error('not found user that has the given id')
+  if(uniqueUserIds.length === 0) return []
 
   const [themes] = await conn.query<(ThemeModel & RowDataPacket)[]>(
     'SELECT * FROM themes WHERE user_id IN (?)',
-    [uniqueUserIds],
+    [[uniqueUserIds]],
   )
   const themeUserMap = new Map<number, typeof themes[0]>(themes.map(t => [t.user_id, t]));
   
 
   const [icons] = await conn.query<(Pick<IconModel, 'user_id' | 'image'> & RowDataPacket)[]>(
-    'SELECT user_id, image FROM icons WHERE user_id IN (?)', [uniqueUserIds]
+    'SELECT user_id, image FROM icons WHERE user_id IN (?)', [[uniqueUserIds]]
   )
   const iconUserMap = new Map<number, typeof icons[0]>(icons.map(i => [i.user_id, i]))
 

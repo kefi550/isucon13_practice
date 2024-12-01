@@ -6,6 +6,7 @@ import { defaultUserIDKey } from '../contants.js'
 import {
   ReactionResponse,
   fillReactionResponse,
+  fillReactionResponses,
 } from '../utils/fill-reaction-response.js'
 import { throwErrorWith } from '../utils/throw-error-with.js'
 import { ReactionsModel } from '../types/models.js'
@@ -41,21 +42,13 @@ export const getReactionsHandler = [
         .query<(ReactionsModel & RowDataPacket)[]>(query, [livestreamId])
         .catch(throwErrorWith('failed to get reactions'))
 
-      const reactionResponses: ReactionResponse[] = []
-      for (const reaction of reactions) {
-        const reactionResponse = await fillReactionResponse(
-          conn,
-          reaction,
-          c.get('runtime').fallbackUserIcon,
-        ).catch(throwErrorWith('failed to fill reaction'))
-
-        reactionResponses.push(reactionResponse)
-      }
+      const reactionResponses: ReactionResponse[] = await fillReactionResponses(conn, reactions, c.get('runtime').fallbackUserIcon)
 
       await conn.commit().catch(throwErrorWith('failed to commit'))
 
       return c.json(reactionResponses)
     } catch (error) {
+      console.log(error)
       await conn.rollback()
       return c.text(`Internal Server Error\n${error}`, 500)
     } finally {
