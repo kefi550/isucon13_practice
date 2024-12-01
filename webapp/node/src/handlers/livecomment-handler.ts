@@ -6,6 +6,7 @@ import { defaultUserIDKey } from '../contants.js'
 import {
   LivecommentResponse,
   fillLivecommentResponse,
+  fillLivecommentResponses,
 } from '../utils/fill-livecomment-response.js'
 import { fillLivecommentReportResponse } from '../utils/fill-livecomment-report-response.js'
 import {
@@ -45,15 +46,11 @@ export const getLivecommentsHandler = [
         .query<(LivecommentsModel & RowDataPacket)[]>(query, [livestreamId])
         .catch(throwErrorWith('failed to get livecomments'))
 
-      const livecommnetResponses: LivecommentResponse[] = []
-      for (const livecomment of livecomments) {
-        const livecommentResponse = await fillLivecommentResponse(
-          conn,
-          livecomment,
-          c.get('runtime').fallbackUserIcon,
-        ).catch(throwErrorWith('failed to fill livecomment'))
-        livecommnetResponses.push(livecommentResponse)
-      }
+      const livecommnetResponses: LivecommentResponse[] = await fillLivecommentResponses(
+        conn,
+        livecomments,
+        c.get('runtime').fallbackUserIcon,
+      ).catch(throwErrorWith('failed to fill livecomment'))
 
       await conn.commit().catch(throwErrorWith('failed to commit'))
       return c.json(livecommnetResponses)
