@@ -56,7 +56,7 @@ export const reserveLivestreamHandler = [
       // NOTE: 並列な予約のoverbooking防止にFOR UPDATEが必要
       const [slots] = await conn
         .query<(ReservationSlotsModel & RowDataPacket)[]>(
-          'SELECT * FROM reservation_slots WHERE start_at >= ? AND end_at <= ? FOR UPDATE',
+          'SELECT * FROM reservation_slots force index (reservation_slots_start_at_end_at) WHERE start_at >= ? AND end_at <= ? FOR UPDATE',
           [body.start_at, body.end_at],
         )
         .catch((error) => {
