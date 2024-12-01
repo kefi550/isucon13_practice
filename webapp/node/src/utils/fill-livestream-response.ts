@@ -43,13 +43,14 @@ export const fillLivestreamResponses = async (
   const [tags] = await conn.query<(TagsModel & Pick<LivestreamTagsModel, 'livestream_id'> & RowDataPacket)[]>(
     `
       SELECT 
-        tags.*,
+        tags.id,
+        tags.name,
         livestream_tags.livestream_id
       FROM 
         tags
       INNER JOIN livestream_tags ON tags.id = livestream_tags.tag_id
       WHERE
-        livestream_tags.livestream_id IN (?)
+        livestream_tags.livestream_id IN ?
     `,
     [[uniqueLivestreamIds]]
   )

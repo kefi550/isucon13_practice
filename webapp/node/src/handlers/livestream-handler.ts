@@ -6,6 +6,7 @@ import { defaultUserIDKey } from '../contants.js'
 import {
   LivestreamResponse,
   fillLivestreamResponse,
+  fillLivestreamResponses,
 } from '../utils/fill-livestream-response.js'
 import {
   LivecommentReportResponse,
@@ -247,16 +248,11 @@ export const getMyLivestreamsHandler = [
         )
         .catch(throwErrorWith('failed to get livestreams'))
 
-      const livestreamResponses: LivestreamResponse[] = []
-      for (const livestream of livestreams) {
-        const livestreamResponse = await fillLivestreamResponse(
-          conn,
-          livestream,
-          c.get('runtime').fallbackUserIcon,
-        ).catch(throwErrorWith('failed to fill livestream'))
-
-        livestreamResponses.push(livestreamResponse)
-      }
+      const livestreamResponses: LivestreamResponse[] = await fillLivestreamResponses(
+        conn,
+        livestreams,
+        c.get('runtime').fallbackUserIcon
+      ).catch(throwErrorWith('failed to fill livestream'))
 
       await conn.commit().catch(throwErrorWith('failed to commit'))
 
