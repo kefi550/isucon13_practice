@@ -4,7 +4,6 @@ import { HonoEnvironment } from '../types/application.js'
 import { verifyUserSessionMiddleware } from '../middlewares/verify-user-session-middleare.js'
 import { throwErrorWith } from '../utils/throw-error-with.js'
 import {
-  LivecommentsModel,
   LivestreamsModel,
   ReactionsModel,
   UserModel,
@@ -35,24 +34,39 @@ export const getUserStatisticsHandler = [
         return c.json('not found user that has the given username', 404)
       }
 
-      // ランク算出
+      
       const [[ranking]]  = await conn.query<({ rank: number } & RowDataPacket)[]>(`
-        SELECT
-          *
-        FROM (
-          SELECT
-            u.name as username,
-            RANK() OVER (ORDER BY (COUNT(r.id) + IFNULL(SUM(l2.tip), 0)) DESC , u.name DESC) AS \`rank\`
+        WITH tip_sum AS (
+          SELECT 
+            u.id,
+            IFNULL(SUM(lc.tip), 0) as tip_sum
           FROM users u
-          LEFT OUTER JOIN livestreams l ON l.user_id = u.id
-          LEFT JOIN reactions r ON r.livestream_id = l.id
-          LEFT JOIN livecomments l2 ON l2.livestream_id = l.id
+          LEFT JOIN livestreams l ON u.id = l.user_id
+          LEFT JOIN livecomments lc ON lc.id = lc.livestream_id
           GROUP BY u.id
-        ) as ranking
-        WHERE
-          username = ?
-      `, [username]);
-
+        )
+        , reaction_count AS (
+          SELECT 
+            u.id,
+            IFNULL(SUM(r.id), 0) as reaction_count
+          FROM users u
+          LEFT JOIN livestreams l ON u.id = l.user_id
+          LEFT JOIN reactions r ON l.id = r.livestream_id
+          GROUP BY u.id
+        )
+        , rankings AS (
+          SELECT 
+            u.id,
+            RANK() OVER (ORDER BY (tip_sum.tip_sum + reaction_count.reaction_count) DESC, u.name DESC) as val
+          FROM users u
+          INNER JOIN tip_sum ON u.id = tip_sum.id
+          INNER JOIN reaction_count ON u.id = reaction_count.id
+        )
+        SELECT 
+          rankings.val AS \`rank\`
+        FROM rankings
+        WHERE rankings.id = ? 
+      `, [user.id])
 
       const [[[reactions]], [[comments]], [[tips]], [[viewers]], [[favoriteEmoji]]] = await Promise.all([
         conn.query<({count: number} & RowDataPacket)[]>(`
