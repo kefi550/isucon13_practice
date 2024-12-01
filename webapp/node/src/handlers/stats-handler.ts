@@ -36,132 +36,89 @@ export const getUserStatisticsHandler = [
       }
 
       // ランク算出
-      const [users] = await conn
-        .query<(UserModel & RowDataPacket)[]>('SELECT * FROM users')
-        .catch(throwErrorWith('failed to get users'))
+      const [[ranking]]  = await conn.query<({ rank: number } & RowDataPacket)[]>(`
+        SELECT
+          *
+        FROM (
+          SELECT
+            u.name as username,
+            RANK() OVER (ORDER BY (COUNT(r.id) + IFNULL(SUM(l2.tip), 0)) DESC , u.name DESC) AS \`rank\`
+          FROM users u
+          LEFT OUTER JOIN livestreams l ON l.user_id = u.id
+          LEFT JOIN reactions r ON r.livestream_id = l.id
+          LEFT JOIN livecomments l2 ON l2.livestream_id = l.id
+          GROUP BY u.id
+        ) as ranking
+        WHERE
+          username = ?
+      `, [username]);
 
-      const ranking: { username: string; score: number }[] = []
-      for (const user of users) {
-        const [[{ 'COUNT(*)': reaction }]] = await conn
-          .query<({ 'COUNT(*)': number } & RowDataPacket)[]>(
+
+      const [[[reactions]], [[comments]], [[tips]], [[viewers]], [[favoriteEmoji]]] = await Promise.all([
+        conn.query<({count: number} & RowDataPacket)[]>(`
+          SELECT
+            COUNT(*) as count
+          FROM
+            livestreams l
+          INNER JOIN
+            reactions r ON r.livestream_id = l.id
+          WHERE
+            l.user_id = ?
+        `, [user.id]),
+        conn.query<({count: number} & RowDataPacket)[]>(`
+          SELECT
+            COUNT(*) as count
+          FROM
+            livestreams l
+          INNER JOIN
+            livecomments lc ON lc.livestream_id = l.id
+          WHERE
+            l.user_id = ?
+        `, [user.id]),
+        conn.query<({sum: number} & RowDataPacket)[]>(`
+          SELECT
+            IFNULL(SUM(lc.tip), 0) AS sum
+          FROM
+            livestreams l
+          INNER JOIN
+            livecomments lc ON lc.livestream_id = l.id
+          WHERE
+            l.user_id = ?
+        `, [user.id]),
+        conn.query<({sum: number} & RowDataPacket)[]>(`
+          SELECT
+            count(1) as sum
+          FROM
+            livestreams l
+          INNER JOIN
+            livestream_viewers_history h ON h.livestream_id = l.id
+          WHERE
+            l.user_id = ?
+        `, [user.id]),
+        conn
+          .query<(Pick<ReactionsModel, 'emoji_name'> & RowDataPacket)[]>(
             `
-              SELECT COUNT(*) FROM users u
+              SELECT r.emoji_name
+              FROM users u
               INNER JOIN livestreams l ON l.user_id = u.id
               INNER JOIN reactions r ON r.livestream_id = l.id
               WHERE u.id = ?
+              GROUP BY emoji_name
+              ORDER BY COUNT(*) DESC, emoji_name DESC
+              LIMIT 1
             `,
             [user.id],
           )
-          .catch(throwErrorWith('failed to count reactions'))
-
-        const [[{ 'IFNULL(SUM(l2.tip), 0)': tips }]] = await conn
-          .query<
-            ({ 'IFNULL(SUM(l2.tip), 0)': string | number } & RowDataPacket)[]
-          >(
-            `
-              SELECT IFNULL(SUM(l2.tip), 0) FROM users u
-              INNER JOIN livestreams l ON l.user_id = u.id	
-              INNER JOIN livecomments l2 ON l2.livestream_id = l.id
-              WHERE u.id = ?
-            `,
-            [user.id],
-          )
-          .catch(throwErrorWith('failed to count tips'))
-
-        ranking.push({
-          username: user.name,
-          score: reaction + Number(tips),
-        })
-      }
-
-      ranking.sort((a, b) => {
-        if (a.score === b.score) return a.username.localeCompare(b.username)
-        return a.score - b.score
-      })
-
-      let rank = 1
-      for (const r of ranking.toReversed()) {
-        if (r.username === username) {
-          break
-        }
-        rank++
-      }
-
-      // リアクション数
-      const [[{ 'COUNT(*)': totalReactions }]] = await conn
-        .query<({ 'COUNT(*)': number } & RowDataPacket)[]>(
-          `
-            SELECT COUNT(*) FROM users u 
-            INNER JOIN livestreams l ON l.user_id = u.id 
-            INNER JOIN reactions r ON r.livestream_id = l.id
-            WHERE u.name = ?
-          `,
-          [username],
-        )
-        .catch(throwErrorWith('failed to count reactions'))
-
-      // ライブコメント数、チップ合計
-      let totalLivecomments = 0
-      let totalTip = 0
-      const [livestreams] = await conn
-        .query<(LivestreamsModel & RowDataPacket)[]>(
-          `SELECT * FROM livestreams WHERE user_id = ?`,
-          [user.id],
-        )
-        .catch(throwErrorWith('failed to get livestreams'))
-
-      for (const livestream of livestreams) {
-        const [livecomments] = await conn
-          .query<(LivecommentsModel & RowDataPacket)[]>(
-            `SELECT * FROM livecomments WHERE livestream_id = ?`,
-            [livestream.id],
-          )
-          .catch(throwErrorWith('failed to get livecomments'))
-
-        for (const livecomment of livecomments) {
-          totalTip += livecomment.tip
-          totalLivecomments++
-        }
-      }
-
-      // 合計視聴者数
-      let viewersCount = 0
-      for (const livestream of livestreams) {
-        const [[{ 'COUNT(*)': livestreamViewerCount }]] = await conn
-          .query<({ 'COUNT(*)': number } & RowDataPacket)[]>(
-            `SELECT COUNT(*) FROM livestream_viewers_history WHERE livestream_id = ?`,
-            [livestream.id],
-          )
-          .catch(throwErrorWith('failed to get livestream_view_history'))
-
-        viewersCount += livestreamViewerCount
-      }
-
-      // お気に入り絵文字
-      const [[favoriteEmoji]] = await conn
-        .query<(Pick<ReactionsModel, 'emoji_name'> & RowDataPacket)[]>(
-          `
-            SELECT r.emoji_name
-            FROM users u
-            INNER JOIN livestreams l ON l.user_id = u.id
-            INNER JOIN reactions r ON r.livestream_id = l.id
-            WHERE u.name = ?
-            GROUP BY emoji_name
-            ORDER BY COUNT(*) DESC, emoji_name DESC
-            LIMIT 1
-          `,
-          [username],
-        )
-        .catch(throwErrorWith('failed to get favorite emoji'))
+      ])
 
       await conn.commit().catch(throwErrorWith('failed to commit'))
 
       return c.json({
-        rank,
-        viewers_count: viewersCount,
-        total_reactions: totalReactions,
-        total_livecomments: totalLivecomments,
-        total_tip: totalTip,
+        rank: ranking.rank,
+        viewers_count: viewers.sum,
+        total_reactions: reactions.count,
+        total_livecomments: comments.count,
+        total_tip: tips.sum,
         favorite_emoji: favoriteEmoji?.emoji_name,
       })
     } catch (error) {

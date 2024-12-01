@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -u
+set -eu
 
 LOCAL_PATH="."
 
