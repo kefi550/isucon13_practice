@@ -26,7 +26,7 @@ export const fillLivecommentResponses = async(
   if(uniqueUserIds.length === 0) return []
 
   const [users] = await conn.query<(UserModel & RowDataPacket)[]>(
-    'SELECT * FROM users WHERE id IN (?)',
+    'SELECT * FROM users WHERE id IN ?',
     [[uniqueUserIds]],
   )
   if(users.length !== uniqueUserIds.length) {
@@ -38,7 +38,7 @@ export const fillLivecommentResponses = async(
 
   const uniqueLivestreamIds = [...new Set(livecomments.map(r => r.livestream_id))]
   const [livestreams] = await conn.query<(LivestreamsModel & RowDataPacket)[]>(
-    'SELECT * FROM livestreams WHERE id IN (?)',
+    'SELECT * FROM livestreams WHERE id IN ?',
     [[uniqueLivestreamIds]],
   )
   if (livestreams.length !== uniqueLivestreamIds.length) throw new Error(`not found livestream that has the given id`)
