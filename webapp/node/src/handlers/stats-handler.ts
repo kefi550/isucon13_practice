@@ -164,44 +164,33 @@ export const getLivestreamStatisticsHandler = [
         .catch(throwErrorWith('failed to get livestreams'))
 
       // ランク算出
-      const ranking: {
-        livestreamId: number
-        title: string
-        score: number
-      }[] = []
-      for (const livestream of livestreams) {
-        const [[{ 'COUNT(*)': reactionCount }]] = await conn
-          .query<({ 'COUNT(*)': number } & RowDataPacket)[]>(
-            'SELECT COUNT(*) FROM livestreams l INNER JOIN reactions r ON l.id = r.livestream_id WHERE l.id = ?',
-            [livestream.id],
-          )
-          .catch(throwErrorWith('failed to count reactions'))
-
-        const [[{ 'IFNULL(SUM(l2.tip), 0)': totalTip }]] = await conn
-          .query<
-            ({ 'IFNULL(SUM(l2.tip), 0)': number | string } & RowDataPacket)[]
-          >(
-            'SELECT IFNULL(SUM(l2.tip), 0) FROM livestreams l INNER JOIN livecomments l2 ON l.id = l2.livestream_id WHERE l.id = ?',
-            [livestream.id],
-          )
-          .catch(throwErrorWith('failed to count tips'))
-
-        ranking.push({
-          livestreamId: livestream.id,
-          title: livestream.title,
-          score: reactionCount + Number(totalTip),
-        })
-      }
-      ranking.sort((a, b) => {
-        if (a.score === b.score) return a.livestreamId - b.livestreamId
-        return a.score - b.score
-      })
-
-      let rank = 1
-      for (const r of ranking.toReversed()) {
-        if (r.livestreamId === livestreamId) break
-        rank++
-      }
+      const [[{ "rank": rank }]] = await conn
+        .query<({ rank: number }) & RowDataPacket[]>(`
+          select \`rank\`
+          from (
+            select
+              livestreamId,
+              rank() over (order by sum(score) desc) as \`rank\`
+            from
+            (
+              select
+                l.id as livestreamId,
+                ifnull(sum(l2.tip), 0) as score
+              from livestreams l
+              left join livecomments l2 on l2.livestream_id = l.id
+              group by l.id
+              union
+              select
+                l.id as livestreamId,
+                count(r.id) as score
+              from livestreams l
+              left join reactions r on r.livestream_id = l.id
+              group by l.id
+            ) a
+            group by livestreamId
+          ) b
+          where livestreamId = ?
+      `, [livestreamId]);
 
       // 視聴者数算出
       const [[{ 'COUNT(*)': viewersCount }]] = await conn
