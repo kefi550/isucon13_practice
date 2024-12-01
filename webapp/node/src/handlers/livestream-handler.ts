@@ -156,37 +156,42 @@ export const searchLivestreamsHandler = async (
   await conn.beginTransaction()
 
   try {
-    const livestreams: (LivestreamsModel & RowDataPacket)[] = []
-
+    let livestreams: (LivestreamsModel & RowDataPacket)[] = []
     if (keyTagName) {
-      // タグによる取得
-      const [tagIds] = await conn
-        .query<(Pick<TagsModel, 'id'> & RowDataPacket)[]>(
-          'SELECT id FROM tags WHERE name = ?',
-          [keyTagName],
+      [livestreams] = await conn
+        .query<(LivestreamsModel & RowDataPacket)[]>(
+          `
+            select 
+              l.id as \`id\`,
+              l.user_id as user_id,
+              l.title as title,
+              l.description as description,
+              l.playlist_url as playlist_url,
+              l.thumbnail_url as thumbnail_url,
+              l.start_at as start_at,
+              l.end_at as end_at
+            from tags t
+            join livestream_tags lt on lt.tag_id = t.id
+            join livestreams l on l.id = lt.livestream_id
+            where t.name = ?
+            order by l.id desc
+          `, [keyTagName],
         )
-        .catch(throwErrorWith('failed to get tag'))
-
-      const [livestreamTags] = await conn
-        .query<(LivestreamTagsModel & RowDataPacket)[]>(
-          'SELECT * FROM livestream_tags WHERE tag_id IN (?) ORDER BY livestream_id DESC',
-          [tagIds.map((tag) => tag.id)],
-        )
-        .catch(throwErrorWith('failed to get keyTaggedLivestreams'))
-
-      for (const livestreamTag of livestreamTags) {
-        const [[livestream]] = await conn
-          .query<(LivestreamsModel & RowDataPacket)[]>(
-            'SELECT * FROM livestreams WHERE id = ?',
-            [livestreamTag.livestream_id],
-          )
-          .catch(throwErrorWith('failed to get livestreams'))
-
-        livestreams.push(livestream)
-      }
+        .catch(throwErrorWith('failed to get livestreams'))
     } else {
       // 検索条件なし
-      let query = `SELECT * FROM livestreams ORDER BY id DESC`
+      let query = `
+        SELECT
+          id,
+          user_id,
+          title,
+          description,
+          playlist_url,
+          thumbnail_url,
+          start_at,
+          end_at
+        FROM livestreams ORDER BY id DESC
+      `
       const limit = c.req.query('limit')
       if (limit) {
         const limitNumber = atoi(limit)
