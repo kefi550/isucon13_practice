@@ -10,14 +10,13 @@ import {
 } from '../utils/fill-livestream-response.js'
 import {
   LivecommentReportResponse,
-  fillLivecommentReportResponse,
+  fillLivecommentReportResponses,
 } from '../utils/fill-livecomment-report-response.js'
 import {
   LivecommentReportsModel,
   LivestreamTagsModel,
   LivestreamsModel,
   ReservationSlotsModel,
-  TagsModel,
   UserModel,
 } from '../types/models.js'
 import { throwErrorWith } from '../utils/throw-error-with.js'
@@ -464,15 +463,11 @@ export const getLivecommentReportsHandler = [
         )
         .catch(throwErrorWith('failed to get livecomment reports'))
 
-      const reportResponses: LivecommentReportResponse[] = []
-      for (const livecommentReport of livecommentReports) {
-        const report = await fillLivecommentReportResponse(
-          conn,
-          livecommentReport,
-          c.get('runtime').fallbackUserIcon,
-        ).catch(throwErrorWith('failed to fill livecomment report'))
-        reportResponses.push(report)
-      }
+      const reportResponses: LivecommentReportResponse[] = await fillLivecommentReportResponses(
+        conn,
+        livecommentReports,
+        c.get('runtime').fallbackUserIcon,
+      ).catch(throwErrorWith('failed to fill livecomment report'))
 
       await conn.commit().catch(throwErrorWith('failed to commit'))
 
