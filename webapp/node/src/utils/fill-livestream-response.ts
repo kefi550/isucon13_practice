@@ -29,7 +29,7 @@ export const fillLivestreamResponses = async (
   if(uniqueUserIds.length === 0) return []
 
   const [users] = await conn.query<(UserModel & RowDataPacket)[]>(
-    'SELECT * FROM users WHERE id IN (?)',
+    'SELECT * FROM users WHERE id IN ?',
     [[uniqueUserIds]],
   )
   if(users.length !== uniqueUserIds.length) {

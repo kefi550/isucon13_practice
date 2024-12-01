@@ -25,14 +25,14 @@ export const fillUserResponses = async(
   if(uniqueUserIds.length === 0) return []
 
   const [themes] = await conn.query<(ThemeModel & RowDataPacket)[]>(
-    'SELECT * FROM themes WHERE user_id IN (?)',
+    'SELECT * FROM themes WHERE user_id IN ?',
     [[uniqueUserIds]],
   )
   const themeUserMap = new Map<number, typeof themes[0]>(themes.map(t => [t.user_id, t]));
   
 
   const [icons] = await conn.query<(Pick<IconModel, 'user_id' | 'image'> & RowDataPacket)[]>(
-    'SELECT user_id, image FROM icons WHERE user_id IN (?)', [[uniqueUserIds]]
+    'SELECT user_id, image FROM icons WHERE user_id IN ?', [[uniqueUserIds]]
   )
   const iconUserMap = new Map<number, typeof icons[0]>(icons.map(i => [i.user_id, i]))
 
