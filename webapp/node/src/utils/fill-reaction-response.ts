@@ -20,24 +20,26 @@ export const fillReactionResponses = async(
   reactions: ReactionsModel[],
   getFallbackUserIcon: () => Promise<Readonly<ArrayBuffer>>
 ) => {
+  if(reactions.length === 0) return []
+
   const uniqueUserIds = [...new Set(reactions.map(r => r.user_id))]
+  const uniqueLivestreamIds = [...new Set(reactions.map(r => r.livestream_id))]
 
-  if(uniqueUserIds.length === 0) return []
+  const [[users], [livestreams]] = await Promise.all([
+    conn.query<(UserModel & RowDataPacket)[]>(
+      'SELECT * FROM users WHERE id IN ?',
+      [[uniqueUserIds]],
+    ),
+    conn.query<(LivestreamsModel & RowDataPacket)[]>(
+      'SELECT * FROM livestreams WHERE id IN ?',
+      [[uniqueLivestreamIds]],
+    ) 
+  ])
 
-  const [users] = await conn.query<(UserModel & RowDataPacket)[]>(
-    'SELECT * FROM users WHERE id IN ?',
-    [[uniqueUserIds]],
-  )
+
   if(users.length !== uniqueUserIds.length) {
     throw new Error("not found user that has the given id")
   }
-
-  const uniqueLivestreamIds = [...new Set(reactions.map(r => r.livestream_id))]
-
-  const [livestreams] = await conn.query<(LivestreamsModel & RowDataPacket)[]>(
-    'SELECT * FROM livestreams WHERE id IN ?',
-    [[uniqueLivestreamIds]],
-  )
   if (livestreams.length !== uniqueLivestreamIds.length) throw new Error(`not found livestream that has the given id`)
 
   const userResponses = await fillUserResponses(conn, users, getFallbackUserIcon)

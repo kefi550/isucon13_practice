@@ -23,14 +23,23 @@ export const fillLivecommentReportResponses = async (
   livecommentReports: LivecommentReportsModel[],
   getFallbackUserIcon: () => Promise<Readonly<ArrayBuffer>>,
 ) => {
+  if (livecommentReports.length === 0) return []
   const uniqueUserIds = [...new Set(livecommentReports.map(l => l.user_id))]
+  const uniqueLivecommentId = [...new Set(livecommentReports.map(l => l.livecomment_id))]
 
-  if(uniqueUserIds.length === 0) return []
-
-  const [users] = await conn.query<(UserModel & RowDataPacket)[]>(
-    'SELECT * FROM users WHERE id IN ?',
-    [[uniqueUserIds]],
+  const [[users], [livecomments]] = await Promise.all(
+    [
+      conn.query<(UserModel & RowDataPacket)[]>(
+        'SELECT * FROM users WHERE id IN ?',
+        [[uniqueUserIds]],
+      ),
+      conn.query<(LivecommentsModel & RowDataPacket)[]>(
+        'SELECT * FROM livecomments WHERE id IN ?', 
+        [[uniqueLivecommentId]]
+      )
+    ]
   )
+
   if(users.length !== uniqueUserIds.length) {
     throw new Error("not found user that has the given id")
   }
@@ -38,12 +47,7 @@ export const fillLivecommentReportResponses = async (
   const userResponses = await fillUserResponses(conn, users, getFallbackUserIcon)
   const userResponseMap = new Map(userResponses.map(ur => [ur.id, ur]))
 
-  const uniqueLivecommentId = [...new Set(livecommentReports.map(l => l.livecomment_id))]
 
-  const [livecomments] = await conn.query<(LivecommentsModel & RowDataPacket)[]>(
-    'SELECT * FROM livecomments WHERE id IN ?', 
-    [[uniqueLivecommentId]]
-  )
   if (livecomments.length !== uniqueLivecommentId.length)
     throw new Error('not found livecomment that has the given id')
 

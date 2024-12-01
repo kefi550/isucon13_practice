@@ -24,36 +24,38 @@ export const fillLivestreamResponses = async (
   livestreams: LivestreamsModel[],
   getFallbackUserIcon: () => Promise<Readonly<ArrayBuffer>>,
 ) => {
+  if (livestreams.length === 0) return []
   const uniqueUserIds = [...new Set(livestreams.map(r => r.user_id))]
+  const uniqueLivestreamIds = [...new Set(livestreams.map(l => l.id))]
 
-  if(uniqueUserIds.length === 0) return []
 
-  const [users] = await conn.query<(UserModel & RowDataPacket)[]>(
-    'SELECT * FROM users WHERE id IN ?',
-    [[uniqueUserIds]],
-  )
+  const [[users], [tags]] = await Promise.all([
+    conn.query<(UserModel & RowDataPacket)[]>(
+      'SELECT * FROM users WHERE id IN ?',
+      [[uniqueUserIds]],
+    ),
+    conn.query<(TagsModel & Pick<LivestreamTagsModel, 'livestream_id'> & RowDataPacket)[]>(
+      `
+        SELECT 
+          tags.id,
+          tags.name,
+          livestream_tags.livestream_id
+        FROM 
+          tags
+        INNER JOIN livestream_tags ON tags.id = livestream_tags.tag_id
+        WHERE
+          livestream_tags.livestream_id IN ?
+      `,
+      [[uniqueLivestreamIds]]
+    )
+  ])
+
   if(users.length !== uniqueUserIds.length) {
     throw new Error("not found user that has the given id")
   }
 
   const userResponses = await fillUserResponses(conn, users, getFallbackUserIcon)
   const userMap = new Map(userResponses.map(u => [u.id, u]))
-
-  const uniqueLivestreamIds = [...new Set(livestreams.map(l => l.id))]
-  const [tags] = await conn.query<(TagsModel & Pick<LivestreamTagsModel, 'livestream_id'> & RowDataPacket)[]>(
-    `
-      SELECT 
-        tags.id,
-        tags.name,
-        livestream_tags.livestream_id
-      FROM 
-        tags
-      INNER JOIN livestream_tags ON tags.id = livestream_tags.tag_id
-      WHERE
-        livestream_tags.livestream_id IN ?
-    `,
-    [[uniqueLivestreamIds]]
-  )
 
   // 手続きで書いた方が早いので手続的に書いてる
   const tagMap = new Map<number, typeof tags>()

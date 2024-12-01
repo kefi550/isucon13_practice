@@ -20,23 +20,24 @@ export const fillUserResponses = async(
   users: UserModel[],
   getFallbackUserIcon: () => Promise<Readonly<ArrayBuffer>>,
 ) => {
+  if(users.length === 0) return []
+
   const uniqueUserIds = [...new Set(users.map(u => u.id))]
 
-  if(uniqueUserIds.length === 0) return []
+  const [[themes], [icons], fallbackUserIcon] = await Promise.all([
+    conn.query<(ThemeModel & RowDataPacket)[]>(
+      'SELECT * FROM themes WHERE user_id IN ?',
+      [[uniqueUserIds]],
+    ),
+    conn.query<(Pick<IconModel, 'user_id' | 'image'> & RowDataPacket)[]>(
+      'SELECT user_id, image FROM icons WHERE user_id IN ?', [[uniqueUserIds]]
+    ),
+    getFallbackUserIcon()
+  ])
 
-  const [themes] = await conn.query<(ThemeModel & RowDataPacket)[]>(
-    'SELECT * FROM themes WHERE user_id IN ?',
-    [[uniqueUserIds]],
-  )
   const themeUserMap = new Map<number, typeof themes[0]>(themes.map(t => [t.user_id, t]));
-  
-
-  const [icons] = await conn.query<(Pick<IconModel, 'user_id' | 'image'> & RowDataPacket)[]>(
-    'SELECT user_id, image FROM icons WHERE user_id IN ?', [[uniqueUserIds]]
-  )
   const iconUserMap = new Map<number, typeof icons[0]>(icons.map(i => [i.user_id, i]))
 
-  const fallbackUserIcon = await getFallbackUserIcon()
   const responses: UserResponse[] = users.map(user => {
     const theme = themeUserMap.get(user.id)!
     const image = iconUserMap.get(user.id)?.image ?? fallbackUserIcon
